@@ -216,3 +216,28 @@ This functionality was used to visually represent word frequency:
 * Less frequent words appear with lighter shades.
 
 As a result, users can quickly identify the relative frequency of words directly from the graph visualization.
+
+# 3. Results
+
+When trying the previous query, we get the following result. These are the 10 most related words to tree, and there are two sentences that links two of these words each.
+
+![](img/arbol-10.png)
+
+When hovering the mouse over the sentence, we can read it:
+
+![](img/arbol-10-frase.png)
+
+We can repeat the same process with the word libro:
+
+![](img/10-libro.png)
+
+Indeed, we can take advantage of the flexibility that the Cypher language offers, to refine the results. For example, if we wanted to focus on producing more sentences, we could do the following. First, extend the limit of similar words to 30. This would produce noticeable more sentences. Then, we could delete the words that aren't associated with any sentence. For example, taking this approach with the tree word:
+
+![](img/30-arbol.png)
+
+# 4. Acknowledgments
+
+- [armhzjz. Spanish language embeddings. kaggle, 2020](https://www.kaggle.com/code/ahernandez1/spanish-language-embeddings)
+- [US National Endowment for the Humanities. Corpus del español: Web/dialects, 2016](https://www.kaggle.com/code/ahernandez1/spanish-language-embeddings)
+- [RAE. Corpus de referencia del español actual (crea) - listado de frecuencias](https://corpus.rae.es/lfrecuencias.html)
+- [Rachael Tatman. 120 million word spanish corpus. kaggle, 2017](https://www.kaggle.com/datasets/rtatman/120-million-word-spanish-corpus)
