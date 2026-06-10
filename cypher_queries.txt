@@ -1,0 +1,56 @@
+/* Query para importar csv de las palabras */
+
+LOAD CSV WITH HEADERS
+FROM 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRIgWll0Tsj0oRKYLv6MW8HGgzAludXPhZWQZqoqNIb_IEPvEPyVEbA0gvjF7_cNro-vBcgcUOYJErO/pub?output=csv' AS row
+WHERE row.palabra IS NOT NULL
+
+MERGE (p:Palabra{palabra:row.palabra, f:row.frecuencia})
+WITH row,p
+CALL db.create.setNodeVectorProperty(p, 'embedding', apoc.convert.fromJsonList(row.embedding))
+
+////////////////////////////////////////////////////////////////////////////////////
+/* Query para importar csv de los enunciados */
+
+LOAD CSV FROM 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTA0rHo3YK_53BuFtcQk_ZyHI7JoihKQw_aEkB40GWFvhM7GucjNQDD338J4Q01trhciLo1GS9Ysxf4/pub?output=csv' AS row
+
+MERGE (E:Enunciado {texto:row[0]})
+WITH apoc.convert.fromJsonList(row[1]) as L1, E
+UNWIND L1 as l1
+  MATCH (p:Palabra {palabra: l1})
+  MERGE (E)-[:CONTIENE]->(p)
+
+////////////////////////////////////////////////////////////////////////////////////
+/* Query para dar las $num palabras más relacionadas con 
+la palabra $pal y los enunciados que contienen al menos
+2 de ellas */
+
+CALL {
+    MATCH (p:Palabra {palabra: $pal})
+    CALL db.index.vector.queryNodes('palabras', $num, p.embedding)
+    YIELD node AS node1
+    RETURN COLLECT(node1) AS nodosP
+}
+
+MATCH (e:Enunciado)-[r]->(p:Palabra)
+WHERE p IN nodosP
+WITH e, COLLECT(DISTINCT p) AS relacionados, nodosP, COLLECT(DISTINCT r) as relaciones
+WHERE SIZE(relacionados) >= 2
+RETURN e, nodosP, relaciones
+
+////////////////////////////////////////////////////////////////////////////////////
+/* Query para dar los enunciados que estén relacionados con al menos
+2 palabras de las 30 palabras más próximas a la palabra $pal y las
+palabras con las que los enunciados están relacionados */
+
+CALL {
+    MATCH (p:Palabra {palabra: $pal})
+    CALL db.index.vector.queryNodes('palabras', 30, p.embedding)
+    YIELD node AS node1
+    RETURN COLLECT(node1) AS nodosP
+}
+
+MATCH (e:Enunciado)-[r]->(p:Palabra)
+WHERE p IN nodosP
+WITH e, COLLECT(DISTINCT p) AS relacionados, nodosP, COLLECT(DISTINCT r) as relaciones
+WHERE SIZE(relacionados) >= 2
+RETURN e, relacionados, relaciones
